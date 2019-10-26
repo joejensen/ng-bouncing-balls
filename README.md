@@ -1,2 +1,3 @@
 # ng-bouncing-balls
-Angular Component to make google doodle style bouncing balls from any image
+
+An Angular component that allows rendering an arbitrary image in the same style as the September 2010 bouncing balls Google doodle.
