@@ -1,5 +1,8 @@
 import {Vector} from './vector';
 
+/**
+ * A point tracks the size and position of each ball
+ */
 export class Point {
   public curPos: Vector;
   public friction: number;
@@ -10,6 +13,9 @@ export class Point {
   public targetPos: Vector;
   public velocity: Vector;
   public color: string;
+
+  // References used only by the div renderer
+  private ballDiv: Element;
 
   constructor(x: number, y: number, z: number, size: number, color: string) {
     this.curPos = new Vector(x, y, z);
@@ -55,10 +61,25 @@ export class Point {
     }
   }
 
-  draw(cx: CanvasRenderingContext2D): void {
+  drawCanvas(cx: CanvasRenderingContext2D): void {
     cx.fillStyle = this.color;
     cx.beginPath();
     cx.arc(this.curPos.x, this.curPos.y, this.radius, 0, Math.PI * 2, true);
     cx.fill();
+  }
+
+  drawDiv( parent: Element): void {
+    if (!this.ballDiv) {
+      this.ballDiv = document.createElement('div');
+      this.ballDiv.classList.add('point');
+      parent.appendChild(this.ballDiv);
+    }
+
+    this.ballDiv.setAttribute('style',
+      `background-color: ${this.color};
+      top: ${this.curPos.y - this.radius}px;
+      left: ${this.curPos.x - this.radius}px;
+      width: ${this.radius * 2}px;
+      height: ${this.radius * 2}px`);
   }
 }

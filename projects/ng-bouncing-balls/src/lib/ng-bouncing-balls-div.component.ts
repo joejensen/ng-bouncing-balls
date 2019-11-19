@@ -2,22 +2,28 @@ import {AfterViewInit, Component, ElementRef, Input, ViewChild} from '@angular/c
 import {PointCollection} from './pointcollection';
 
 /**
- * Angular component which renders bouncing balls using a canvas to draw all the balls.
+ * Angular component which renders a bouncing balls image using absolutely positioned divs to render each ball.
  * <br/>
- * The major downside of a canvas is that it can't render outside of the canvas itself.
+ * Although using divs isn't really HTML5, it has a huge advantage in that it's more widely compatible and
+ * it's balls can easily overlap other components on the page.
  */
 @Component({
-  selector: 'lib-ng-bouncing-balls',
-  template: `<canvas #canvas class="ng-bouncing-balls-canvas"></canvas>`,
+  selector: 'lib-ng-bouncing-balls-div',
+  template: `<div #container class="ng-bouncing-balls-container"></div>`,
   styles: [`
-    .ng-bouncing-balls-canvas {
-        padding: 0;
+    .ng-bouncing-balls-container {
+        position: relative;
+      }
+
+    ::ng-deep .ng-bouncing-balls-container>.point {
+        position: absolute;
+        border-radius: 50%;
     }
   `]
 })
-export class NgBouncingBallsComponent implements AfterViewInit {
+export class NgBouncingBallsDivComponent implements AfterViewInit {
   // a reference to the canvas element from our template
-  @ViewChild('canvas', {static: false}) canvas: ElementRef;
+  @ViewChild('container', {static: false}) containerRef: ElementRef;
 
   // A url to an image to render as bouncing balls
   @Input() public src;
@@ -29,21 +35,19 @@ export class NgBouncingBallsComponent implements AfterViewInit {
   // Size of the cells the image should be subdivided into
   @Input() public cellSize = 20;
 
-  private cx: CanvasRenderingContext2D;
-
   private pointCollection: PointCollection = new PointCollection();
 
   constructor() {
   }
 
   ngAfterViewInit(): void {
-    const canvasEl: HTMLCanvasElement = this.canvas.nativeElement;
+    const containerrEl: HTMLDivElement = this.containerRef.nativeElement;
 
-    canvasEl.ontouchstart = e => {
+    containerrEl.ontouchstart = e => {
       e.preventDefault();
     };
 
-    canvasEl.ontouchmove = e => {
+    containerrEl.ontouchmove = e => {
       e.preventDefault();
 
       let mPosx = 0;
@@ -59,7 +63,7 @@ export class NgBouncingBallsComponent implements AfterViewInit {
         mPosy = e.targetTouches[0].clientY + document.body.scrollTop + document.documentElement.scrollTop;
       }
 
-      let currentObject: any = canvasEl;
+      let currentObject: any = containerrEl;
       if ( currentObject.offsetParent) {
         do {
           ePosx += currentObject.offsetLeft;
@@ -70,17 +74,17 @@ export class NgBouncingBallsComponent implements AfterViewInit {
       this.pointCollection.mousePos.setValue(mPosx - ePosx, mPosy - ePosy, 0);
     };
 
-    canvasEl.ontouchend = e => {
+    containerrEl.ontouchend = e => {
       e.preventDefault();
       this.pointCollection.mousePos.setValue(-999, -999, -999);
     };
 
-    canvasEl.ontouchcancel = e => {
+    containerrEl.ontouchcancel = e => {
       e.preventDefault();
       this.pointCollection.mousePos.setValue(-999, -999, -999);
     };
 
-    canvasEl.onmousemove = e => {
+    containerrEl.onmousemove = e => {
       let mPosx = 0;
       let mPosy = 0;
       let ePosx = 0;
@@ -94,7 +98,7 @@ export class NgBouncingBallsComponent implements AfterViewInit {
         mPosy = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
       }
 
-      let currentObject: any = canvasEl;
+      let currentObject: any = containerrEl;
       if ( currentObject.offsetParent) {
         do {
           ePosx += currentObject.offsetLeft;
@@ -105,23 +109,18 @@ export class NgBouncingBallsComponent implements AfterViewInit {
       this.pointCollection.mousePos.setValue(mPosx - ePosx, mPosy - ePosy, 0);
     };
 
-    canvasEl.onmouseleave = e => {
+    containerrEl.onmouseleave = e => {
       this.pointCollection.mousePos.setValue(-999, -999, -999);
     };
 
-    this.cx = canvasEl.getContext('2d');
-
-    // set the width and height
-    canvasEl.width = this.width;
-    canvasEl.height = this.height;
+    containerrEl.setAttribute('style', `width:${this.width}px; height:${this.height}px`);
     this.pointCollection.loadFromSource( this.src, this.width, this.height, this.cellSize);
     this.timeout();
   }
 
   private timeout(): void {
-    const canvasEl: HTMLCanvasElement = this.canvas.nativeElement;
-    this.cx.clearRect(0, 0, canvasEl.width, canvasEl.height);
-    this.pointCollection.drawCanvas(this.cx);
+    const container: HTMLDivElement = this.containerRef.nativeElement;
+    this.pointCollection.drawDiv(container);
     this.pointCollection.update();
     setTimeout(() => this.timeout(), 30);
   }
